@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:keepScreenOn="true"
+    android:id="@+id/background"
+    android:background="@drawable/m15"
+    android:orientation="vertical"
+    >
+
+    <LinearLayout
+        android:id="@+id/myvie"
+        android:layout_width="match_parent"
+        android:layout_height="187dp"
+        android:background="#ffcc00"
+        android:elevation="12dp"
+        android:orientation="vertical"
+        android:padding="2dp">
+
+
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="331dp"
+            android:layout_height="27dp"
+
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:text="TextView"
+
+            android:textSize="12dp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+
+
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="79dp"
+                        android:layout_gravity="center"
+
+                        android:layout_marginTop="5dp"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:text="Welcome I'm Spynosaur"
+                        android:textColor="#000000"
+                        android:textSize="18dp"
+                        android:textStyle="bold" />
+
+
+
+
+            <ImageView
+                android:id="@+id/imageView2"
+                android:layout_width="411dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/logo2" />
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <GridView
+        android:id="@+id/apps_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:divider="@null"
+        android:numColumns="3"
+        android:verticalSpacing="2dp"
+        android:horizontalSpacing="2dp"
+        android:stretchMode="columnWidth">
+
+    </GridView>
+
+</LinearLayout>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp"
+    android:orientation="vertical">
+
+
+
+
+    <LinearLayout
+        android:id="@+id/myvie"
+        android:layout_width="92dp"
+        android:layout_height="152dp"
+        android:background="@drawable/fullrounded"
+
+        android:orientation="vertical"
+        android:padding="2dp">
+
+        <LinearLayout
+            android:id="@+id/myvieww"
+            android:layout_width="88dp"
+            android:layout_height="118dp"
+            android:background="@drawable/myrect"
+
+            android:orientation="vertical"
+            android:paddingTop="35dp">
+
+            <ImageView
+                android:id="@+id/item_app_icon"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:gravity="center" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/myviewww"
+            android:layout_width="88dp"
+            android:layout_height="30dp"
+
+
+
+            android:background="@drawable/bottomrounded"
+            >
+
+            <TextView
+                android:id="@+id/item_app_label"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+
+                android:layout_gravity="center"
+                android:foregroundGravity="center"
+                android:gravity="center"
+                android:textColor="#555994"
+                android:textSize="12dp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+
+</LinearLayout>
