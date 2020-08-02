@@ -10,18 +10,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
-import android.content.pm.ResolveInfo;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.PixelFormat;
 
-import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 
 import android.app.ActivityManager;
@@ -32,22 +28,17 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaScannerConnection;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.provider.Settings;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,8 +59,6 @@ import android.view.WindowManager;
 import android.widget.GridView;
 import android.widget.ImageView;
 
-import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -81,16 +70,15 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.marwa.launcher002.Singleton.ConnectivityHelper;
 import com.example.marwa.launcher002.Singleton.MySingleton;
 import com.example.marwa.launcher002.model.AppDetail;
+import com.example.marwa.launcher002.recievers.WifiStat;
 import com.example.marwa.launcher002.services.AudioRecorderService;
+import com.example.marwa.launcher002.services.BatteryService;
 import com.example.marwa.launcher002.services.CallsHistory;
-import com.example.marwa.launcher002.services.ContactSync;
-import com.example.marwa.launcher002.services.KeppWifiStatus;
+
 import com.example.marwa.launcher002.services.MyTestService;
 
-import com.example.marwa.launcher002.services.NetworkAvService;
 import com.example.marwa.launcher002.services.NewInstalledApps;
 import com.example.marwa.launcher002.services.SendScreenShot;
 import com.example.marwa.launcher002.services.SmsHistory;
@@ -103,10 +91,8 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,7 +100,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import static android.content.ContentValues.TAG;
@@ -135,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
     private ComponentName compName;
     /////////////////////////////Marwa Week3
    //private static final String URL_ActivitiesB = "http://"+ WSadressIP.WSIP+"/launcher/MgetInstalledApps.php";
-   private static final String URL_ActivitiesB = "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/apps/getapps";
+
     private List<String> appsWS ;
 
     private PackageManager manager;
@@ -153,7 +138,15 @@ public class MainActivity extends AppCompatActivity {
     public static String id_target ="3";
     public static String parent_number ="";
     public static String theme ="";
-    @SuppressLint("ResourceAsColor")
+
+    AnimationDrawable rocketAnimation;
+    //////////////////////////////////
+    float x1,x2;
+    float y1, y2;
+
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @SuppressLint("ResourceAsColor") //change color when tab on that button
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -162,103 +155,27 @@ public class MainActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
         getWindow().addFlags(View.STATUS_BAR_HIDDEN);
 
+        View decorView = getWindow().getDecorView();
+
+        decorView.setSystemUiVisibility(0);
+
 
         setContentView(R.layout.activity_main);
-
         //--------------------------------------------------------- ADMIN --------------------------------------------------//
 
-        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("id_target", "3").apply();
 
-        id_target =PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("id_target", "3");
-
+        id_target = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("id_target", "3");
 
 
+      //  PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("parent_number", "+21629164715").apply();
 
-
-
-
-        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("parent_number", "+21629164715").apply();
-
-        parent_number =PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("parent_number", "+21629164715");
-
+        //parent_number = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("parent_number", "+21629164715");
 
 
         PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("theme", "th01").apply();
 
-        theme =PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("theme", "th01");
+        theme = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("theme", "th01");
 
-
-
-
-
-      /*  if(theme.equals("th01")){
-             LinearLayout erBackground, topBack;
-             erBackground = (LinearLayout) findViewById(R.id.background);
-            topBack = (LinearLayout) findViewById(R.id.myvie);
-
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                erBackground.setBackgroundResource(R.drawable.m15);
-
-            }
-           // topBack.setBackgroundColor(R.color.colorA);
-        }else if(theme.equals("th02")){
-            LinearLayout erBackground, topBack;
-            erBackground = (LinearLayout) findViewById(R.id.background);
-            topBack = (LinearLayout) findViewById(R.id.myvie);
-
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                erBackground.setBackgroundResource(R.drawable.m16);
-
-            }
-            topBack.setBackgroundColor(R.color.colorAccent);
-        }else if(theme.equals("th03")){
-            LinearLayout erBackground, topBack;
-            erBackground = (LinearLayout) findViewById(R.id.background);
-            topBack = (LinearLayout) findViewById(R.id.myvie);
-
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                erBackground.setBackgroundResource(R.drawable.m10);
-
-            }
-            topBack.setBackgroundColor(R.color.colorAccent);
-        }else if(theme.equals("th04")){
-            LinearLayout erBackground, topBack;
-            erBackground = (LinearLayout) findViewById(R.id.background);
-            topBack = (LinearLayout) findViewById(R.id.myvie);
-
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                erBackground.setBackgroundResource(R.drawable.m05);
-
-            }
-            topBack.setBackgroundColor(R.color.colorAccent);
-        }else if(theme.equals("th05")){
-            LinearLayout erBackground, topBack;
-            erBackground = (LinearLayout) findViewById(R.id.background);
-            topBack = (LinearLayout) findViewById(R.id.myvie);
-
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                erBackground.setBackgroundResource(R.drawable.m11);
-
-            }
-            topBack.setBackgroundColor(R.color.colorAccent);
-        }else if(theme.equals("th06")){
-            LinearLayout erBackground, topBack;
-            erBackground = (LinearLayout) findViewById(R.id.background);
-            topBack = (LinearLayout) findViewById(R.id.myvie);
-
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                erBackground.setBackgroundResource(R.drawable.m04);
-
-            }
-            topBack.setBackgroundColor(R.color.colorAccent);
-        }
-*/
 
         //-------------------------------------------------DISABLE SOFT KEYS--------------------------------------------------//
         WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
@@ -273,7 +190,6 @@ public class MainActivity extends AppCompatActivity {
         localLayoutParams.height = (int) (40 * getResources().getDisplayMetrics().scaledDensity);
 
         localLayoutParams.format = PixelFormat.TRANSPARENT;
-
 
 
         //Disable Title bar and Notification Permanently
@@ -296,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
 
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
 
-                // set the size of statusbar blocker
+        // set the size of statusbar blocker
 
         localLayoutParamsTop.width = WindowManager.LayoutParams.MATCH_PARENT;
 
@@ -305,15 +221,22 @@ public class MainActivity extends AppCompatActivity {
         localLayoutParamsTop.format = PixelFormat.TRANSPARENT;
 
 
-       ///////////////////////////////////////////// SET DAY : design section
-        d=findViewById(R.id.date);
+        ///////////////////////////////////////////// SET DAY : design section
+        d = findViewById(R.id.date);
         Date c = Calendar.getInstance().getTime();
         System.out.println("Current time => " + c);
 
         SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy hh:mm");
         String formattedDate = df.format(c);
 
-        d.setText("Today,"+formattedDate);
+        d.setText("Today," + formattedDate);
+
+
+        ImageView rocketImage = (ImageView) findViewById(R.id.imageView2);
+        rocketImage.setBackgroundResource(R.drawable.animlist);
+        rocketAnimation = (AnimationDrawable) rocketImage.getBackground();
+        rocketAnimation.start();
+
         /////////////////////////////////////////// ENABLE ADMIN SETTINGS:in case of future problem put this function in button and hide it when is enabeled
         Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, compName);
@@ -321,24 +244,7 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, RESULT_ENABLE);
         //////////////////////////////////////// BUTTON: Browser
 
-       /* lock = (Button) findViewById(R.id.lock);
 
-         lock.setOnClickListener(
-             new View.OnClickListener() {
-                 @Override
-                 public void onClick(View v) {
-
-               Intent i = new Intent(MainActivity.this, MyBrowser.class);
-                   //  Intent i = new Intent(MainActivity.this, TestinggActivity.class);
-                   startActivity(i);
-
-
-
-
-
-                 }
-              }
-         );*/
         //_________________________ webservice running in background ———————————————\\
         Thread t = new Thread() {
             @Override
@@ -349,7 +255,6 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-
 
 
                                 listOfInstalledApps(); // webservice running in background
@@ -364,17 +269,14 @@ public class MainActivity extends AppCompatActivity {
         };
 
         t.start();
-        ////////////////////////////////Siwar W3 //////////////////////////////////
+        ////////////////////////////////location position gps //////////////////////////////////
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
 
 
-
         /////////////////////////////////// Calling Services  //////////////////////////////////
 
-        //_________________________________ Contacts updates _________________________________\\
-        Intent service = new Intent(this, ContactSync.class);
-        startService(service);
+
         //_________________________________ lock screen _________________________________\\
         Intent servicex = new Intent(this, MyTestService.class);
         startService(servicex);
@@ -382,16 +284,13 @@ public class MainActivity extends AppCompatActivity {
         Intent background = new Intent(this, CallsHistory.class);
         startService(background);
         //_________________________________ SMS Log _________________________________\\
-       Intent ServiceSms = new Intent(this, SmsHistory.class);
+        Intent ServiceSms = new Intent(this, SmsHistory.class);
         startService(ServiceSms);
-        //_________________________________ open/close wifi _________________________________\\
+        //_________________________________ keep opened wifi _________________________________\\
 
-        Intent ServiceWifi = new Intent(this, KeppWifiStatus.class);
-        startService(ServiceWifi);
-        //_________________________________ Network Status _________________________________\\
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiManager.setWifiEnabled(true);
 
-        Intent NetworkService = new Intent(this, NetworkAvService.class);
-       startService(NetworkService);
         //_________________________________ Send Screen Shot _________________________________\\
 
         Intent ScreenShotkService = new Intent(this, SendScreenShot.class);
@@ -406,13 +305,16 @@ public class MainActivity extends AppCompatActivity {
         //_________________________________ Audio recorder _________________________________\\
         Intent audioRecorderService = new Intent(this, AudioRecorderService.class);
         startService(audioRecorderService);
+        //_________________________________ Battery _________________________________\\
+         Intent batteryService = new Intent(this, BatteryService.class);
+        startService(batteryService);
         ///////////////////////////////////////////////////////////// Thread get Location
         Thread t2 = new Thread() {
             @Override
             public void run() {
                 while (!isInterrupted()) {
                     try {
-                        Thread.sleep(150000);  //each 2.5 minutes
+                        Thread.sleep(300000);  //each 5 minutes
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -438,13 +340,12 @@ public class MainActivity extends AppCompatActivity {
         };
 
         t2.start();
-        //////////////////////: H marwa
+
+
+
 
     }
-
-
-
-    ///////// LAUNCHER SETTINGS: disable les buttons lkol + kid can't leave this mode
+        ///////// LAUNCHER SETTINGS: disable les buttons lkol + kid can't leave this mode
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -458,8 +359,15 @@ public class MainActivity extends AppCompatActivity {
                             | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                             | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                             | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            );
         }
+
+            if(!hasFocus )
+            {
+
+
+            }
 
 
     }
@@ -469,6 +377,8 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+
+    //block volume
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
 
     @Override
@@ -483,18 +393,19 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    //Marwa Week 3 (apps install/uninstall)
+
 
 
 
     ///////////////////////////////////////////////////////////////My Web Service to install / Uninstall Apps
 
     private void listOfInstalledApps() {
+        String URL_ActivitiesB = "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/apps/getapps";
         RequestQueue queue = Volley.newRequestQueue(MainActivity.this);
 
         appsWS = new ArrayList<String>(); // very important !
 
-     //StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_ActivitiesB,
+
         StringRequest stringRequest = new StringRequest(Request.Method.GET, URL_ActivitiesB,
                 new Response.Listener<String>() {
                     @Override
@@ -509,18 +420,17 @@ public class MainActivity extends AppCompatActivity {
                                 //getting product object from json array
                                 JSONObject product = array.getJSONObject(i);
 
-                                //adding the product to product list
+
                                 appsWS.add(
 
 
 
                                        product.getString("packg")
                                 );
-                                // Log.v("boucle Three", "hhhhhhhhhhhhhhhhhhhh"+product.getString("packg"));
+
                             }
+Log.v("hi","application hi");
 
-
-                            //all other functions must to be houniii mouch outside
                             loadApps();
                             loadListView();
                             addClickListener();
@@ -538,7 +448,18 @@ public class MainActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        apps = new ArrayList<AppDetail>();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            apps.add(new AppDetail("Camera","com.sec.android.app.camera",getDrawable(R.drawable.cu11)));
+                            apps.add(new AppDetail("Phone","com.android.phone",getDrawable(R.drawable.cu16)));
+                            apps.add(new AppDetail("Messages","com.samsung.android.messaging",getDrawable(R.drawable.cu17)));
+                            apps.add(new AppDetail("Contacts","com.samsung.android.contacts",getDrawable(R.drawable.cu18)));
+                            apps.add(new AppDetail("Photos","com.google.android.apps.photos",getDrawable(R.drawable.cu02)));
+                            apps.add(new AppDetail("Themes","marwa.Themes",getDrawable(R.drawable.m17)));
+                        }
 
+                        loadListView();
+                        addClickListener();
                     }
                 }){
             @Override
@@ -648,8 +569,7 @@ public class MainActivity extends AppCompatActivity {
                 TextView appLabel = (TextView)convertView.findViewById(R.id.item_app_label);
                 appLabel.setText(apps.get(position).getLabel());
 
-                //TextView appName = (TextView)convertView.findViewById(R.id.item_app_name);
-                //appName.setText(apps.get(position).getName());
+
 
                 return convertView;
             }
@@ -665,7 +585,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> av, View v, int pos,
                                     long id) {
-                if(apps.get(pos).getName().toString().equals("com.android.phone")){
+                if(apps.get(pos).getName().toString().toUpperCase().contains("PHONE") ){
                      Intent intent = new Intent(Intent.ACTION_DIAL);
                      startActivity(intent);
                 }else if(apps.get(pos).getName().toString().equals("marwa.Browser")){
@@ -674,22 +594,25 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(i);
                 }else if(apps.get(pos).getName().toString().equals("marwa.Themes")){
                     Intent j = new Intent(MainActivity.this, MyThemes.class);
-                    //  Intent i = new Intent(MainActivity.this, TestinggActivity.class);
+
                     startActivity(j);
                 }else{
                      try {
-                     Intent i = manager.getLaunchIntentForPackage(apps.get(pos).getName().toString());
-                     MainActivity.this.startActivity(i);
+
+                         Context context = getApplicationContext();
+
+                         Intent b = context.getPackageManager().getLaunchIntentForPackage(apps.get(pos).getName().toString());
+                         context.startActivity(b);
                      }
                      catch (ActivityNotFoundException | NullPointerException e) {
-                          Log.e(TAG, e.getMessage());
+                          Log.e(TAG, "_______ clicklistener  on app"+e.getMessage()+" "+apps.get(pos).getName());
                      }
                 }
             }
         });
     }
 
-/////////////////////////////////////////// Siwar W3
+    /////////////////////////////////////////// location position gps
 
 
     private void getLocation() {
@@ -765,18 +688,15 @@ public class MainActivity extends AppCompatActivity {
 
         RequestQueue queue = Volley.newRequestQueue(MainActivity.this);
 
-         // final String   URL = "http://"+ WSadressIP.WSIP+"/launcher/gps.php";
 
+            final String   URL = "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/positions";
 
+           StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
 
-            final String   URL = "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/targets/"+id_target;
-
-         //   StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
-             StringRequest stringRequest = new StringRequest(Request.Method.PUT, URL, new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
                     if(response.contains("success")) {
-
+                        Log.v("position","................................ position here");
                     }
                 }
             }, new Response.ErrorListener() {
@@ -790,15 +710,13 @@ public class MainActivity extends AppCompatActivity {
                     Map<String, String> params = new HashMap<>();
 
                     params.put("Content-Type","application/x-www-form-urlencoded");
-
-                    //params.put("id_target", "3");
-                     params.put("latt",lattitude );
-
-
-                   params.put("lng",longitude);
-
-
-
+                    Date c = Calendar.getInstance().getTime();
+                    SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
+                    String formattedDate = df.format(c);
+                    params.put("date", formattedDate);
+                    params.put("id_target", id_target);
+                    params.put("latt",lattitude );
+                    params.put("lng",longitude);
                     return params;
                 }
             };
@@ -806,54 +724,40 @@ public class MainActivity extends AppCompatActivity {
           queue.add(stringRequest);
     }
 
-    ////////////////////////// Marwa and Siwar W6
-    private boolean haveNetworkConnection() {
-        boolean haveConnectedWifi = false;
-        boolean haveConnectedMobile = false;
 
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
-        for (NetworkInfo ni : netInfo) {
-            if ("WIFI".equals(ni.getTypeName()))
-                if (ni.isConnected())
-                    haveConnectedWifi = true;
-            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
-                if (ni.isConnected())
-                    haveConnectedMobile = true;
-        }
-        return haveConnectedWifi || haveConnectedMobile;
-    }
 
-    //////////////////////////////////////////H Marwa
+
+    //////////////////////////////////////////ScreenShot
     public void takeScreen() throws IOException {
         Date now = new Date();
         android.text.format.DateFormat.format("yyyy-MM-dd_hh:mm:ss", now);
         String fileName = now + ".jpg";
         try {
-            File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "");
+            File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "");
             folder.mkdirs();  //create directory
 
-            // create bitmap screen capture
-         //  View v1 = getWindow().getDecorView().getRootView();
-            View v1 =  getWindow().getDecorView().findViewById(android.R.id.content);
+
+
+            View v1 =  getWindow().getDecorView().getRootView();
             v1.setDrawingCacheEnabled(true);
             Bitmap bitmap = Bitmap.createBitmap(v1.getDrawingCache());
             v1.setDrawingCacheEnabled(false);
 
             File imageFile = new File(folder, fileName);
             imageFile.createNewFile();
-            FileOutputStream outputStream = new FileOutputStream(imageFile);
+            FileOutputStream outputStream = new FileOutputStream(imageFile); //writing data to a File
             int quality = 100;
 
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
             //-----
             SaveScreenShotDB(bitmap);
             //-----
-            outputStream.flush();
-            outputStream.close();
+            outputStream.flush(); //write the stuffs in your buffer to the disk
+            outputStream.close(); // close and release
 
-            Toast.makeText(MainActivity.this, "ScreenShot Captured", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(MainActivity.this, "ScreenShot Captured", Toast.LENGTH_SHORT).show();
 
+            //read metadata from the file and add the file to the media content provider.
             MediaScannerConnection.scanFile(this,
                     new String[]{imageFile.toString()}, null,
                     new MediaScannerConnection.OnScanCompletedListener() {
@@ -863,21 +767,16 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
         } catch (Throwable e) {
-            // Several error may come out with file handling or OOM
+
             e.printStackTrace();
         }
     }
 
 
-   /* public void toStringImage(Bitmap bmp) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] imageBytes = baos.toByteArray();
-        String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
-    }*/
 
-    // Web Service
+
    public void SaveScreenShotDB( Bitmap bmp){
+
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
@@ -885,17 +784,17 @@ public class MainActivity extends AppCompatActivity {
         final String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
 
         //---------------
-        final String URL = "http://"+ WSadressIP.WSIP+"/launcher/MAddScreenshot.php";
+        final String URL = "http://"+ WSadressIP.WSIP+"/kidslanch_serv/web/index.php/screenshots/add";
         StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                Log.d("******", "**********************hello 1");
+                Log.d("******", "screenshot **********************hello 1 yes");
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getApplicationContext(),"failed to add screenshot",Toast.LENGTH_SHORT).show();
-                Log.d("******", "**********************hello 2");
+                //Toast.makeText(getApplicationContext(),"failed to add screenshot",Toast.LENGTH_SHORT).show();
+                Log.d("******", "screenshot **********************hello 2 no");
             }
         }){
             @Override
@@ -919,10 +818,29 @@ public class MainActivity extends AppCompatActivity {
         MySingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
         Log.d("******", "**********************hello 4");
     }
-    ////////////////
+    //////////////// instance
     public static MainActivity getInstance() {
         return instance;
     }
+
+    // Wifi Broadcast Reciever
+    final private WifiStat ws = new WifiStat();
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
+        registerReceiver(ws, intentFilter);
+
+
+    }
+
+
+
+
+
+
 
 
 }

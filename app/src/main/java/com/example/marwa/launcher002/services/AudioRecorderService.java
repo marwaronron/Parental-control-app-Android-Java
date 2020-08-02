@@ -81,7 +81,7 @@ boolean isRecording = false;
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-              //  Log.v("record audio","øøøøøøøøøøøøøøøøøøøøøøøøøøøøø 0");
+
                 getAudioRecordState();   //Your code here
             }
         }, 0, 10000);//20 seconds
@@ -93,24 +93,24 @@ boolean isRecording = false;
         super.onDestroy();
     }
 
-   // private static final String URL_Activitiess = "http://"+ WSadressIP.WSIP+"/launcher/MgetAudioRecordState.php";
-   private static final String URL_Activitiess = "http://"+ WSadressIP.WSIPChokoA+"/kidslanch_serv/web/index.php/screens/getchild?id_target=3";
+//chouf l parent requesta l recording wela amal stop recording
+   private static final String URL_Activitiess = "http://"+ WSadressIP.WSIPChokoA+"/kidslanch_serv/web/index.php/screens/getchild?id_target="+ MainActivity.id_target;
     private void getAudioRecordState() {
-        //Log.v("record audio","øøøøøøøøøøøøøøøøøøøøøøøøøøøøø 3 " );
+
         final Integer[] statee = new Integer[1];
 
-      //  StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_Activities,
+
         StringRequest stringRequest = new StringRequest(Request.Method.GET, URL_Activitiess,
                 new Response.Listener<String>() {
 
                     @Override
                     public void onResponse(String response) {
-                     //   Log.v("record audio","øøøøøøøøøøøøøøøøøøøøøøøøøøøøø 2 ");
+
 
                            statee[0] = Integer.parseInt(response);
 
 
-                          //  Log.v("record audio", "øøøøøøøøøøøøøøøøøøøøøøøøøøøøø 1 " + statee[0]);
+
                             oldRecordSate = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
                                     .getString("oldRecordSate", "defaultStringIfNothingFound");
 
@@ -124,7 +124,7 @@ boolean isRecording = false;
                                     e.printStackTrace();
                                 }
                                 isRecording= true;
-                           // } else if (statee[0] == 0 && oldRecordSate.equals("1")) {
+
                         } else if (statee[0] == 0 && isRecording) {
                                 oldRecordSate = "0";
                                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
@@ -134,7 +134,7 @@ boolean isRecording = false;
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
-isRecording = false;
+                                isRecording = false;
                             }
 
                     }
@@ -160,7 +160,7 @@ isRecording = false;
     }
 
     public void startRecording() throws IOException {
-Log.v("record audio","øøøøøøøøøøøøøøøøøøøøøøøøøøøøø is recording now");
+        Log.v("record audio","øøøøøøøøøøøøøøøøøøøøøøøøøøøøø is recording now");
         myAudioRecorder.prepare();
         myAudioRecorder.start();
 
@@ -203,7 +203,7 @@ Log.v("record audio","øøøøøøøøøøøøøøøøøøøøøøøøøøøøø
         }
 
     }
-
+// ba3d stop recording sob l audio format base64 fil BASE
     public void saveAudioDB(final String audioBase64,final String dateAdded){
 
        // final String URL = "http://"+ WSadressIP.WSIP+"/launcher/MAddAudio.php";

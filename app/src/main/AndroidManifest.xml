@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.marwa.launcher002">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -42,14 +43,21 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
     <permission
         android:name="android.permission.OVERRIDE_WIFI_CONFIG"
         android:protectionLevel="signature|privileged" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.STORAGE" />
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -67,10 +75,11 @@
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:stateNotNeeded="true"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+
 
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.HOME" />
@@ -90,18 +99,11 @@
             </intent-filter>
         </receiver>
 
-        <activity
-            android:name=".MyAppsList"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen" />
-
         <service
             android:name=".services.MyTestService"
             android:enabled="true"
             android:exported="false" />
-        <service
-            android:name=".services.ContactSync"
-            android:enabled="true"
-            android:exported="false" />
+
         <service
             android:name=".services.CallsHistory"
             android:enabled="true"
@@ -109,18 +111,12 @@
 
         <activity
             android:name=".MyBrowser"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustNothing" />
 
         <service
             android:name=".services.SmsHistory"
-            android:enabled="true"
-            android:exported="false" />
-        <service
-            android:name=".services.KeppWifiStatus"
-            android:enabled="true"
-            android:exported="false" />
-        <service
-            android:name=".services.NetworkAvService"
             android:enabled="true"
             android:exported="false" />
 
@@ -151,8 +147,40 @@
             android:enabled="true"
             android:exported="false" />
 
-        <activity android:name=".TestinggActivity" />
-        <activity android:name=".MyThemes"></activity>
+        <activity
+            android:name=".MyThemes"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+
+        <receiver
+            android:name=".recievers.WifiStat"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter android:priority="100">
+                <action android:name="android.net.wifi.STATE_CHANGE" />
+            </intent-filter>
+        </receiver>
+
+
+        <activity android:name=".MyConfActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:stateNotNeeded="true"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".services.BatteryService"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

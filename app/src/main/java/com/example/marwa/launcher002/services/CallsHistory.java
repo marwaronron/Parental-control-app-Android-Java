@@ -1,30 +1,24 @@
 package com.example.marwa.launcher002.services;
 
 import android.Manifest;
-import android.app.Application;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.os.Build;
 import android.os.IBinder;
 import android.provider.CallLog;
-import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.marwa.launcher002.MainActivity;
-import com.example.marwa.launcher002.R;
 import com.example.marwa.launcher002.utils.WSadressIP;
 
 import java.text.SimpleDateFormat;
@@ -34,6 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+
+
+
 
 public class CallsHistory extends Service {
     private Timer timer = new Timer();
@@ -47,13 +44,19 @@ public class CallsHistory extends Service {
     public void onCreate()
     {
         super.onCreate();
-      // getCallsDetails(getApplicationContext());
+
       timer.scheduleAtFixedRate(new TimerTask() {
+
             @Override
             public void run() {
-             //Your code here
-              //Log.v("..........calls", getCallDetails(getApplicationContext()));
+
                 getCallsDetails(getApplicationContext());
+
+
+
+
+
+
             }
         }, 0, 10000);
     }
@@ -65,11 +68,11 @@ public class CallsHistory extends Service {
     }
 
 
-    //private static final int REQUEST_PHONE_CALL = 1;
+
 
     public void getCallsDetails (Context context){
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            // ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE},REQUEST_PHONE_CALL);
+
         }
 
         String[] details = new String[]{CallLog.Calls.NUMBER,
@@ -85,85 +88,76 @@ public class CallsHistory extends Service {
 
         cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI, details, null, null, CallLog.Calls._ID + " DESC");
 
-        if(cursor.getCount()!=0){
-            cursor.moveToFirst();
-            String name = cursor.getString(cursor.getColumnIndex(CallLog.Calls.CACHED_NAME));
+        if(cursor.getCount()!=0) {
+             cursor.moveToFirst();
+
+                String name = cursor.getString(cursor.getColumnIndex(CallLog.Calls.CACHED_NAME));
+
+                String number = cursor.getString(0);
+                String type = cursor.getString(1);
+                String duration = cursor.getString(2);
+                // String name = cursor.getString(3);
+                String id = cursor.getString(4);
+                String dir = null;
 
 
 
+                Date c = Calendar.getInstance().getTime();
+                String date = c.toString();
+
+
+                SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm");
+                String formattedDate = df.format(c);
+
+
+                int dircode = Integer.parseInt(type);
+                switch (dircode) {
+                    case CallLog.Calls.OUTGOING_TYPE:
+                        dir = "OUTGOING";
+                        break;
+                    case CallLog.Calls.INCOMING_TYPE:
+                        dir = "INCOMING";
+                        break;
+
+                    case CallLog.Calls.MISSED_TYPE:
+                        dir = "MISSED";
+                        break;
+
+                    case CallLog.Calls.REJECTED_TYPE:
+                        dir = "REJECTED";
+                        break;
+                    case CallLog.Calls.BLOCKED_TYPE:
+                        dir = "BLOCKED";
+                        break;
+                }
+
+
+                if (name == null) {
+                    name = "NotSaved.";
+                }
+                AddCallLineDB(id, name, number, dir, duration, formattedDate);
+                 NotifDB(dir , number,id);
 
 
 
-
-
-            String number = cursor.getString(0);
-            String type = cursor.getString(1);
-            String duration = cursor.getString(2);
-           // String name = cursor.getString(3);
-            String id = cursor.getString(4);
-            String dir = null;
-
-
-          //  String  secondindex = cursor.getString(5);
-
-
-
-            Date c = Calendar.getInstance().getTime();
-            String date = c.toString();
-
-
-
-            SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm");
-            String formattedDate = df.format(c);
-
-
-            int dircode = Integer.parseInt(type);
-            switch (dircode) {
-                case CallLog.Calls.OUTGOING_TYPE:
-                    dir = "OUTGOING";
-                    break;
-                case CallLog.Calls.INCOMING_TYPE:
-                    dir = "INCOMING";
-                    break;
-
-                case CallLog.Calls.MISSED_TYPE:
-                    dir = "MISSED";
-                    break;
-
-                case CallLog.Calls.REJECTED_TYPE:
-                    dir = "REJECTED";
-                    break;
-                case CallLog.Calls.BLOCKED_TYPE:
-                    dir = "BLOCKED";
-                    break;
             }
-          //  Log.v("wwwwwwwwwwwwwwwwww", "number:" + number + " type:" + type + " duration:" + duration + " name:" + name + " id:" + id + " dir:" + dir+" date:"+date);
-
-
-        if(name==null){
-            name = "NotSaved.";
-        }
-                AddCallLineDB(id, name, number,dir, duration,formattedDate);
-
-
             cursor.close();
 
-        }
-       // cursor.close();
+
     }
 
 
     public void AddCallLineDB(final String cid,final String name, final String cnumber, final String cdir, final String cduration, final String cdate){
 
         try {
-           Log.d("onrecieve", "on recieveeeeeeeeee");
-           final String   URL = "http://"+ WSadressIP.WSIP+"/launcher/MAddCall.php";
-         //  final String   URL =  "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/calls";
+           Log.d("onrecieve", "on recieveeeeeeeeee Call");
+
+          final String   URL =  "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/calls/add";
             StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
                     if(response.contains("success")) {
-                            //
+                        //NotifDB(cdir , cnumber,cid);
                     }
                 }
             }, new Response.ErrorListener() {
@@ -197,6 +191,47 @@ public class CallsHistory extends Service {
         }
 
     }
+
+
+
+    final String   URL_Notif =  "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/notifs/add";
+
+    public void NotifDB(final String typedOfCall , final String number, final String cid) {
+
+
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_Notif,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("Content-Type","application/x-www-form-urlencoded");
+                Date c = Calendar.getInstance().getTime();
+                SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
+                String formattedDate = df.format(c);
+                params.put("date", formattedDate);
+                params.put("content", "Call: "+typedOfCall+" number: "+number+" id: "+cid);
+                params.put("id_target", MainActivity.id_target);
+                return params;
+            }
+        };
+
+        //adding our stringrequest to queue
+        Volley.newRequestQueue(CallsHistory.this).add(stringRequest);
+
+    }
+
 
 
 

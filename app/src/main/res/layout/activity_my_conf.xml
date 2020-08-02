@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MyConfActivity"
+    android:background="@color/colorX"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textView20190501"
+        android:layout_width="474dp"
+        android:layout_height="41dp"
+        android:layout_marginTop="2dp"
+        android:gravity="center"
+        android:text="@string/Config05012019"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="30sp" />
+
+    <EditText
+        android:id="@+id/editText20190501"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="137dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="@string/target_code" />
+
+    <Button
+        android:id="@+id/buttoncode"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="226dp"
+        android:background="@color/colorC"
+        android:text="@string/confirm234"
+        android:textColor="#ffffff"
+        android:textStyle="bold" />
+</RelativeLayout>

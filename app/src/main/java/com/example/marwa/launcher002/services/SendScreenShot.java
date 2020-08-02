@@ -9,6 +9,7 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
 import android.util.Base64;
@@ -64,7 +65,7 @@ public class SendScreenShot extends Service {
             public void run() {
                 getScreenState();   //Your code here
             }
-        }, 0, 60000);//1 minute
+        }, 0, 10000);//1 minute
     }
 
     @Override
@@ -73,51 +74,32 @@ public class SendScreenShot extends Service {
         super.onDestroy();
     }
 
-    private static final String URL_Activities = "http://"+ WSadressIP.WSIP+"/launcher/MgetScreenShotRequest.php";
+    private static final String URL_Activities = "http://"+ WSadressIP.WSIP+"/kidslanch_serv/web/index.php/screens/getchildscreen?id_target="+ MainActivity.id_target;
 
     private void getScreenState() {
 
         final Integer[] statee = new Integer[1];
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_Activities,
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, URL_Activities,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        try {
 
-                            JSONArray array = new JSONArray(response);
-
-
-                            for (int i = 0; i < array.length(); i++) {
-
-
-                                JSONObject product = array.getJSONObject(i);
-                                statee[0] = product.getInt("send_screen_shot");
-
-
-                            }
-
-                            if(statee[0] == 1){
-
-                                try {
-
-                                    MainActivity.getInstance().takeScreen();
-
-                                    Log.v("marwa","testeeeeeeeeeeeeeeeeeeeeeeeeeeee   456");
-
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-
+                        statee[0] = Integer.parseInt(response);
+                        if (statee[0] == 1 ) {
+                            try {
+                                MainActivity.getInstance().takeScreen();
+                                Log.v("marwa","testeeeeeeeeeeeeeeeeeeeeeeeeeeee   456");
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
 
 
 
-
-                        } catch (JSONException e) {
-
-                            e.printStackTrace();
+                        }else{
+                            Log.v("marwa","testeeeeeeeeeeeeeeeeeeeeeeeeeeee   no");
                         }
+
                     }
                 },
                 new Response.ErrorListener() {
@@ -131,7 +113,7 @@ public class SendScreenShot extends Service {
                 Map<String, String> params = new HashMap<>();
                 params.put("Content-Type","application/x-www-form-urlencoded");
 
-                params.put("id_target",MainActivity.id_target);
+               // params.put("id_target",MainActivity.id_target);
 
                 return params;
             }

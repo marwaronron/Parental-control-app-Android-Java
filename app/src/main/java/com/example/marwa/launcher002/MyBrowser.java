@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.inputmethodservice.Keyboard;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -46,6 +47,8 @@ public class MyBrowser extends AppCompatActivity {
     WebView MyWebView;
     public static final String URL_REGEX = "^((https?|ftp)://|(www|ftp)\\.)?[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$";
 
+    //public static final String URL_REGEX = "^((www|ftp)\\.)?[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,23 +64,56 @@ public class MyBrowser extends AppCompatActivity {
         txtUrl = (EditText) findViewById(R.id.editText);
         GoToUrl = (ImageView) findViewById(R.id.imageView4);
         MyWebView = (WebView) findViewById(R.id.webView1);
-        MyWebView.setWebViewClient(new WebViewClient());
+        MyWebView.setWebViewClient(new WebViewClient()
+        {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+
+               // Log.d("WebView", "your current url when webpage loading.." + url);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+               // Log.d("WebView", "your current url when webpage loading.. finish" + url);
+                super.onPageFinished(view, url);
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                // TODO Auto-generated method stub
+                super.onLoadResource(view, url);
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                txtUrl.setText(url);
+                //when url change check safety again
+                CheckSafetyDB(txtUrl.getText().toString());
+
+                System.out.println("when you click on any interlink on webview that time you got url :-" + url);
+                return super.shouldOverrideUrlLoading(view, url);
+            }
+        });
         Close = (ImageView) findViewById(R.id.imageView7);
 
-txtUrl.setOnClickListener(
-        new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getSupportActionBar().hide();
-                getWindow().addFlags(View.STATUS_BAR_HIDDEN);
-                getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                        WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) ;
-            }
-        }
-);
 
 
+
+        // when u type text hide top bar
+        txtUrl.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        getSupportActionBar().hide();
+                        getWindow().addFlags(View.STATUS_BAR_HIDDEN);
+                        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) ;
+                    }
+                }
+        );
+
+        // when u finsih typing text hide keyboard
         txtUrl.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
@@ -92,18 +128,22 @@ txtUrl.setOnClickListener(
                 }
             }
         });
+
+        //button
        GoToUrl.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         if(!txtUrl.getText().equals("")){
                             Log.v("lllllllllllllll",txtUrl.getText().toString());
+
+                            //hide keyboard
                             InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
 
                             imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
 
 
-
+                            // check url form is correct typed
                             Pattern p = Pattern.compile(URL_REGEX);
                             Matcher m = p.matcher(txtUrl.getText().toString());//replace with string to compare
 
@@ -113,6 +153,7 @@ txtUrl.setOnClickListener(
 
 
                             }else{
+                                Toast.makeText(MyBrowser.this,"Enter a valide Website",Toast.LENGTH_SHORT).show();
                                 System.out.println("no result found");
                             }
 
@@ -131,6 +172,10 @@ txtUrl.setOnClickListener(
                }
        );
     }
+
+
+
+
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -150,14 +195,18 @@ txtUrl.setOnClickListener(
 
     }
 
-    private static final String URL_Activities = "http://"+ WSadressIP.WSIP+"/launcher/MgetWebSafety.php";
-    //final String   URL_Notif =  "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/blockedwebs";
+
     final boolean[] isSafe = {false};
+
     private void CheckSafetyDB(final String typedWeb) {
+        String lk = typedWeb.replace("https://","");
+
+
+        final String   URL_Activities =  "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/blockedwebs/checklink?id_target="+MainActivity.id_target+"&link="+lk;
 
         final Integer[] statee = new Integer[1];
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_Activities,
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, URL_Activities,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -166,22 +215,18 @@ txtUrl.setOnClickListener(
                             JSONArray array = new JSONArray(response);
 
 
-                          for (int i = 0; i < array.length(); i++) {
+
+                            // ken l9it resultat fil response affichi l url
+                          if(array.length() > 0){
+                              MyWebView.getSettings().setJavaScriptEnabled(true);
+
+                              MyWebView.loadUrl(txtUrl.getText().toString());
 
 
-                                JSONObject product = array.getJSONObject(i);
-                                statee[0] = product.getInt("count(*)");
-                                System.out.println("oooooooooooooo  "+statee[0]);
-                          }
-
-                          if(statee[0] >= 1){
-
-                                Toast.makeText(MyBrowser.this,"Forbidden Access",Toast.LENGTH_SHORT).show();
-                                NotifDB(typedWeb);
-                          }else if(statee[0] == 0){
-
-                                MyWebView.getSettings().setJavaScriptEnabled(true);
-                                MyWebView.loadUrl("https://"+txtUrl.getText().toString());
+                          }else{
+                              MyWebView.loadUrl("http://www.esprit.tn");
+                              Toast.makeText(MyBrowser.this,"Forbidden Access",Toast.LENGTH_SHORT).show();
+                              NotifDB(typedWeb);
                           }
 
                         } catch (JSONException e) {
@@ -200,8 +245,7 @@ txtUrl.setOnClickListener(
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
                 params.put("Content-Type","application/x-www-form-urlencoded");
-                params.put("weblink", typedWeb);
-                params.put("target", MainActivity.id_target);
+
                 return params;
             }
         };
@@ -212,7 +256,7 @@ txtUrl.setOnClickListener(
     }
 
 
-    final String   URL_Notif =  "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/notifs";
+    final String   URL_Notif =  "http://"+ WSadressIP.WSIPChoko+"/kidslanch_serv/web/index.php/notifs/add";
 
     private void NotifDB(final String typedWeb) {
 

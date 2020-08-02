@@ -54,16 +54,7 @@ public class getPhotosService extends Service {
     {
         super.onCreate();
         startWatching();
-       /* timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    getAllPhotos();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, 0, 150000);*/
+
     }
 
     @Override
@@ -73,7 +64,7 @@ public class getPhotosService extends Service {
     }
 
 
-    //--------------------- Marwa: send all images in phone
+
 
 
 
@@ -89,8 +80,7 @@ public class getPhotosService extends Service {
                         MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC");
 
         if(mCursor!=null) {
-           // if (mCursor.moveToFirst()){
-              //  do {
+
             mCursor.moveToNext();
                     Log.d(TAG, " - _ID : " + mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media._ID)));
                     Log.d(TAG, " - File Name : " + mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)));
@@ -103,11 +93,6 @@ public class getPhotosService extends Service {
                                 mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media._ID))
                         );
 
-
-
-
-              //  }while (mCursor.moveToNext());
-           // }
             mCursor.close();
         }
 
@@ -120,24 +105,27 @@ public class getPhotosService extends Service {
 
         Bitmap bmp = Bitmap.createBitmap(MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.fromFile(new File(filePath))));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        bmp.compress(Bitmap.CompressFormat.JPEG, 5, baos);
         byte[] imageBytes = baos.toByteArray();
         final String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+        if(bmp!=null){
+            Log.d("ok",""+bmp.getByteCount());
+        }
 
 
 
         //---------------
-        final String URL = "http://"+ WSadressIP.WSIP+"/launcher/MAddPhoto.php";
+        final String URL = "http://"+ WSadressIP.WSIP+"/kidslanch_serv/web/index.php/gallery/add";
         StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                Log.d("******", "**********************gallery 1");
+                Log.d("******", "**********************gallery 1 yes");
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getApplicationContext(),"failed to add screenshot",Toast.LENGTH_SHORT).show();
-                Log.d("******", "**********************gallery 2");
+               // Toast.makeText(getApplicationContext(),"failed to add screenshot",Toast.LENGTH_SHORT).show();
+                Log.d("******", "**********************gallery 2 no");
             }
         }){
             @Override
@@ -176,6 +164,7 @@ public class getPhotosService extends Service {
                // if (event == FileObserver.CREATE || event == FileObserver.CLOSE_WRITE || event == FileObserver.MODIFY || event == FileObserver.MOVED_TO && !file.equals(".probe")) { // check that it's not equal to .probe because thats created every time camera is launched
                     Log.d("MediaListenerService", "File created [" + pathToWatch + file + "]");
                 if (event == FileObserver.CREATE){
+                    // try 2 fois
                     try {
                         getAllPhotos();
                     } catch (IOException e) {
@@ -186,14 +175,7 @@ public class getPhotosService extends Service {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                /*new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
 
-
-
-                        }
-                    });*/
                 }
             }
         };
